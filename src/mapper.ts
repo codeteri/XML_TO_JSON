@@ -47,58 +47,58 @@ export interface MapperInterface {
 }
 
 export const Mapper = (): MapperInterface => {
-    const ingestInvoice = (xml: string): Invoice => {
-        const jsonXml = JSON.parse(xml2json(xml, { compact: true }));
-
-        const invoice: Invoice = {
-            ref: jsonXml.ref._text,
-            issued: jsonXml.issued._text,
-            recipient: {
-                taxId: jsonXml.recipient.taxId._text,
-                name: jsonXml.recipient.name._text,
-                address: {
-                    city: jsonXml.recipient.address.city._text,
-                    country: jsonXml.recipient.address.country._text,
-                    line1: jsonXml.recipient.address.line1._text,
-                    line2: jsonXml.recipient.address.line2._text,
-                    postalCode: jsonXml.recipient.address.postalCode._text,
-                    state: jsonXml.recipient.address.state._text
-                }
-            },
-            lines: jsonXml.lines.map((line: any) => ({
-                name: line.name._text,
-                description: line.description._text,
-                quantity: line.quantity._text,
-                price: {
-                    amount: line.price.amount._text
-                },
-                vat: {
-                    amount: line.vat.amount._text,
-                    type: line.vat.type._text,
-                    code: line.vat.code._text,
-                    exemptReason: line.vat.exemptReason._text
-                },
-                unit: line.unit._text
-            })),
-            total: {
-                amount: jsonXml.total.amount._text
-            },
-            customInfo: {
-                chn: {
-                    invoiceCode: jsonXml.customInfo.chn.invoiceCode._text,
-                    checkCode: jsonXml.customInfo.chn.checkCode._text
-                }
-            }
-        };
-
-        if (invoice.total.amount < 10000) {
-            invoice.customInfo = jsonXml.customInfo;
-        }
-
-        return invoice;
+const ingestInvoice = (xml: string): Invoice => {
+    const jsonXml = JSON.parse(xml2json(xml, { compact: true }));
+    console.log(jsonXml.Invoice['cbc:ID']._text);
+    const invoice:Partial < Invoice > = {
+        ref: jsonXml.Invoice['cbc:ID']._text,
+        issued: jsonXml.Invoice['cbc:IssueDate']._text
+        // recipient: {
+        //     taxId: jsonXml.recipient.taxId._text,
+        //     name: jsonXml.recipient.name._text,
+        //     address: {
+        //         city: jsonXml.recipient.address.city._text,
+        //         country: jsonXml.recipient.address.country._text,
+        //         line1: jsonXml.recipient.address.line1._text,
+        //         line2: jsonXml.recipient.address.line2._text,
+        //         postalCode: jsonXml.recipient.address.postalCode._text,
+        //         state: jsonXml.recipient.address.state._text
+        //     }
+        // },
+        // lines: jsonXml.lines.map((line: any) => ({
+        //     name: line.name._text,
+        //     description: line.description._text,
+        //     quantity: line.quantity._text,
+        //     price: {
+        //         amount: line.price.amount._text
+        //     },
+        //     vat: {
+        //         amount: line.vat.amount._text,
+        //         type: line.vat.type._text,
+        //         code: line.vat.code._text,
+        //         exemptReason: line.vat.exemptReason._text
+        //     },
+        //     unit: line.unit._text
+        // })),
+        // total: {
+        //     amount: jsonXml.total.amount._text
+        // },
+        // customInfo: {
+        //     chn: {
+        //         invoiceCode: jsonXml.customInfo.chn.invoiceCode._text,
+        //         checkCode: jsonXml.customInfo.chn.checkCode._text
+        //     }
+        // }
     };
 
-    return {
-        ingestInvoice
-    };
+    // if (invoice.total.amount < 10000) {
+    //     invoice.customInfo = jsonXml.customInfo;
+    // }
+    // @ts-ignore
+    return invoice;
+};
+
+return {
+    ingestInvoice
+};
 };
