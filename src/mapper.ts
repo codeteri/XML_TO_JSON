@@ -1,6 +1,6 @@
-
 import { xml2json } from 'xml-js';
-// Invoce inteface. This is the structure of the invoice object that will be returned by the ingestInvoice function
+
+// Invoice interface. This is the structure of the invoice object that will be returned by the ingestInvoice function
 export interface Invoice {
   ref: string;
   issued: string;
@@ -46,6 +46,7 @@ export interface Invoice {
       };
   };
 }
+
 // CreditNote interface. This is the structure of the credit note object that will be returned by the ingestCreditNote function
 export interface CreditNote {
   ref: string;
@@ -65,28 +66,30 @@ export interface CreditNote {
       };
   };
   lines: Array<{
-    description: string;
-    quantity: number;
-    price: {
-        amount: number;
-    };
-    vat: {
-        amount: number;
-        type: string;
-        code: string;
-    };
-}>;
-total: {
-    amount: number;
-    currency: string;
-};
+      description: string;
+      quantity: number;
+      price: {
+          amount: number;
+      };
+      vat: {
+          amount: number;
+          type: string;
+          code: string;
+      };
+  }>;
+  total: {
+      amount: number;
+      currency: string;
+  };
 }
+
 // Mapper interface. This is the structure of the Mapper object that will be returned by the Mapper function
 export interface MapperInterface {
   ingestInvoice(xml: string): Invoice;
   ingestCreditNote(xml: string): CreditNote;
 }
-// Mapper function. This function returns a Mapper object that contains the ingestInvoice function
+
+// Mapper function. This function returns a Mapper object that contains the ingestInvoice and ingestCreditNote functions
 export const Mapper = (): MapperInterface => {
   const ingestInvoice = (xml: string): Invoice => {
       const jsonXml = JSON.parse(xml2json(xml, { compact: true }));
@@ -132,16 +135,17 @@ export const Mapper = (): MapperInterface => {
       // @ts-ignore
       return invoice as Invoice;
   };
+
   const ingestCreditNote = (xml: string): CreditNote => {
-    const jsonXml = JSON.parse(xml2json(xml, { compact: true }));
-    const creditNoteLines = Array.isArray(jsonXml.CreditNote['cac:CreditNoteLine'])
-        ? jsonXml.CreditNote['cac:CreditNoteLine']
-        : [jsonXml.CreditNote['cac:CreditNoteLine']];
-    
-    const creditNote: Partial<CreditNote> = {
-        ref: jsonXml.CreditNote['cbc:ID']._text,
-        issued: jsonXml.CreditNote['cbc:IssueDate']._text,
-        recipient: {
+      const jsonXml = JSON.parse(xml2json(xml, { compact: true }));
+      const creditNoteLines = Array.isArray(jsonXml.CreditNote['cac:CreditNoteLine'])
+          ? jsonXml.CreditNote['cac:CreditNoteLine']
+          : [jsonXml.CreditNote['cac:CreditNoteLine']];
+      
+      const creditNote: Partial<CreditNote> = {
+          ref: jsonXml.CreditNote['cbc:ID']._text,
+          issued: jsonXml.CreditNote['cbc:IssueDate']._text,
+          recipient: {
             name: jsonXml.CreditNote['cac:AccountingCustomerParty']['cac:Party']['cac:PartyName']['cbc:Name']?._text || '',
             contact: {
                 mail: jsonXml.CreditNote['cac:AccountingCustomerParty']['cac:Party']['cac:Contact']['cbc:ElectronicMail']?._text || '',
@@ -154,26 +158,27 @@ export const Mapper = (): MapperInterface => {
                 country: jsonXml.CreditNote['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cac:Country']['cbc:IdentificationCode']?._text || '',
                 postalCode: jsonXml.CreditNote['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:PostalZone']?._text || ''
             }
-        },
-        lines: creditNoteLines.map((line: any) => ({
-            description: line['cac:Item']['cbc:Description']?._text || '',
-            quantity: parseInt(line['cbc:CreditedQuantity']._text, 10),
-            price: {
-                amount: parseFloat(line['cac:Price']['cbc:PriceAmount']._text)
-            },
-            vat: {
-                amount: parseInt(line['cac:TaxTotal']['cac:TaxSubtotal']['cbc:TaxAmount']._text, 10),
-                type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:ID']._text,
-                code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:ID']._text
-            },
-        })),
-        total: {
+         },
+          lines: creditNoteLines.map((line: any) => ({
+              description: line['cac:Item']['cbc:Description']?._text || '',
+              quantity: parseInt(line['cbc:CreditedQuantity']._text, 10),
+              price: {
+                  amount: parseFloat(line['cac:Price']['cbc:PriceAmount']._text)
+              },
+              vat: {
+                  amount: parseInt(line['cac:TaxTotal']['cac:TaxSubtotal']['cbc:TaxAmount']._text, 10),
+                  type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:ID']._text,
+                  code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:ID']._text
+              },
+          })),
+          total: {
             amount: jsonXml.CreditNote['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._text ? parseFloat(jsonXml.CreditNote['cac:LegalMonetaryTotal']['cbc:PayableAmount']._text) : 0,
             currency: jsonXml.CreditNote['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._attributes?.currencyID || ''
         }
-    };
-    // @ts-ignore
-    return creditNote as CreditNote;
-};
-return { ingestInvoice, ingestCreditNote };
+      };
+      // @ts-ignore
+      return creditNote as CreditNote;
+  };
+
+  return { ingestInvoice, ingestCreditNote };
 };
