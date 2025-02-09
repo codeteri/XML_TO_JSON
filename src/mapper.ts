@@ -100,53 +100,50 @@ export interface MapperInterface {
 
 // Mapper function. This function returns a Mapper object that contains the ingestInvoice and ingestCreditNote functions
 export const Mapper = (): MapperInterface => {
-  const ingestInvoice = (xml: string): Invoice => {
-      const jsonXml = JSON.parse(xml2json(xml, { compact: true }));
-      const invoice: Partial<Invoice> = {
-          ref: jsonXml.Invoice['cbc:ID']._text,
-          issued: jsonXml.Invoice['cbc:IssueDate']._text,
-          recipient: {
-            // taxId: '', // No equivalent found in the provided XML
-            name: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PartyName']['cbc:Name']?._text || '',
-            contact: {
-                mail: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:Contact']['cbc:ElectronicMail']?._text || '',
-                phone: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:Contact']['cbc:Telephone']?._text || ''
-            },
-            address: {
-                line1: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:StreetName']?._text || '',
-                line2: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:BuildingNumber']?._text || '',
-                city: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:CityName']?._text || '',
-                // state: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['<state XML tag>']?._text || '', // No equivalent found in the provided XML
-                country: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cac:Country']['cbc:IdentificationCode']?._text || '',
-                postalCode: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:PostalZone']?._text || ''
-            }
-         },
-          lines: jsonXml.Invoice['cac:InvoiceLine'].map((line: any) => ({
-              name: line['cac:Item']['cbc:Name']?._text || '',
-              description: line['cac:Item']['cbc:Description']?._text || '',
-              quantity: line['cbc:InvoicedQuantity']._text,
-              price: {
-                  amount: parseFloat(line['cac:Price']['cbc:PriceAmount']._text)
+    const ingestInvoice = (xml: string): Invoice => {
+        const jsonXml = JSON.parse(xml2json(xml, { compact: true }));
+        const invoice: Partial<Invoice> = {
+            ref: jsonXml.Invoice['cbc:ID']._text,
+            issued: jsonXml.Invoice['cbc:IssueDate']._text,
+            recipient: {
+              // taxId: '', // No equivalent found in the provided XML
+              name: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PartyName']['cbc:Name']?._text || '',
+              contact: {
+                  mail: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:Contact']['cbc:ElectronicMail']?._text || '',
+                  phone: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:Contact']['cbc:Telephone']?._text || ''
               },
-              vat: {
-                  amount: parseFloat(line['cac:TaxTotal']['cbc:TaxAmount']._text),
-                  type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:Name']._text,
-                  code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:ID']._text,
-                  exemptReason: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:TaxExemptionReason']?._text
-              },
-              unit: line['cbc:InvoicedQuantity']['@unitCode']
-          })),
-          total: {
-            amount: jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._text ? parseFloat(jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']._text) : 0,
-            currency: jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._attributes?.currencyID || ''
+              address: {
+                  line1: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:StreetName']?._text || '',
+                  line2: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:BuildingNumber']?._text || '',
+                  city: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:CityName']?._text || '',
+                  // state: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['<state XML tag>']?._text || '', // No equivalent found in the provided XML
+                  country: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cac:Country']['cbc:IdentificationCode']?._text || '',
+                  postalCode: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:PostalZone']?._text || ''
+              }
+           },
+            lines: jsonXml.Invoice['cac:InvoiceLine'].map((line: any) => ({
+                description: line['cac:Item']['cbc:Description']?._text || '',
+                quantity: parseInt(line['cbc:InvoicedQuantity']._text, 10),
+                price: {
+                    amount: parseFloat(line['cac:Price']['cbc:PriceAmount']._text)
+                },
+                vat: {
+                    amount: parseInt(line['cac:TaxTotal']['cac:TaxSubtotal']['cbc:TaxAmount']._text, ),
+                    type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:ID']._text,
+                    code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:ID']._text
+                },
+            })),
+            total: {
+              amount: jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._text ? parseFloat(jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']._text) : 0,
+              currency: jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._attributes?.currencyID || ''
+          }
+        };
+        if (invoice.total!.amount < 10000) {
+            invoice.customInfo = jsonXml.customInfo;
         }
-      };
-      if (invoice.total!.amount < 10000) {
-          invoice.customInfo = jsonXml.customInfo;
-      }
-      // @ts-ignore
-      return invoice as Invoice;
-  };
+        // @ts-ignore
+        return invoice as Invoice;
+    };
 
   const ingestCreditNote = (xml: string): CreditNote => {
       const jsonXml = JSON.parse(xml2json(xml, { compact: true }));
