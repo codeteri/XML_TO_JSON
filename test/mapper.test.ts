@@ -1,9 +1,8 @@
 import { Mapper, MapperInterface } from '../src/mapper';
 const DEFAULT_INVOICE=`<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
-         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
-         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
-
+        xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+        xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
     <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
     <cbc:CustomizationID>OIOUBL-2.1</cbc:CustomizationID>
     <cbc:ProfileID schemeAgencyID="320" schemeID="urn:oioubl:id:profileid-1.2">urn:www.nesubl.eu:profiles:profile5:ver2.0</cbc:ProfileID>
@@ -197,47 +196,62 @@ const DEFAULT_INVOICE=`<?xml version="1.0" encoding="UTF-8"?>
         </cac:Price>
     </cac:InvoiceLine>
 </Invoice>`;
-
 describe('Mapper', () => {
     let factory: MapperInterface;
-
     beforeEach(() => {
         factory = Mapper();
     });
-
     it('should convert XML to Invoice', () => {
         const expectedJson = {
+            "customInfo": undefined,
             "ref": "A00095678",
             "issued": "2005-11-20",
             "lines": [
               {
                 "vat": {
-                  "type": "percent",
-                  "amount": 25.00,
-                  "code": "Standard"
+                  "type": "63",
+                  "amount": 1250.00,
+                  "code": "StandardRated"
                 },
                 "description": "Hejsetavle",
                 "quantity": 1,
                 "price": {
                   "amount": 5000.00
-                }
+                },
+              },
+              {
+                "vat": {
+                    "type": "63",
+                    "amount": 12,
+                    "code": "StandardRated"
+                  },
+                  "description": "Beslag",
+                  "quantity": 2,
+                  "price": {
+                    "amount": 25
+                  },
               }
             ],
             "recipient": {
-              "name": "Test Comapny",
-              "taxId": "00000",
+              "name": "Den Lille Skole",
+              //"taxId": "00000",
               "address": {
-                "country": "GBR",
-                "state": "London",
-                "city": "London",
-                "line1": "Merlot",
-                "postalCode": "0000"
-              }
+                "country": "DK",
+                // "state": "London",
+                "city": "Helsingør",
+                "line1": "Fredericiavej",
+                // "line2": "10",
+                "postalCode": "3000"
+              },
+              "contact": {
+                "mail": "Hans@dls.dk",
+                "phone": "26532147"
+                }
             },
             "total": {
-              "amount": 1202,
-              "currency": "USD"
-            },
+              "amount":6312.5,
+              "currency": "DKK"
+            }
           };
         expect(factory.ingestInvoice(DEFAULT_INVOICE)).toEqual(expectedJson);
     });
