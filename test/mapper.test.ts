@@ -715,58 +715,64 @@ describe('Mapper', () => {
     // Test suite for the Mapper function invoice xml to json.
     it('should convert XML to Invoice', () => {
         const expectedJson = {
-            "customInfo": undefined,
-            "ref": "A00095678",
-            "issued": "2005-11-20",
-            "lines": [
-              {
-                "vat": {
-                  "type": "63",
-                  "amount": 1250.00,
-                  "code": "StandardRated"
+            customInfo: undefined,
+            ref: 'A00095678',
+            issued: '2005-11-20',
+            lines: [
+                {
+                    description: 'Hejsetavle',
+                    name: 'Hejsetavle',
+                    quantity: 1,
+                    price: {
+                        amount: 5000
+                    },
+                    vat: {
+                        amount: 1250,
+                        code: 'StandardRated',
+                        type: 'Moms'
+                    },
+                    unit: 'EA',
+                    certificate: undefined
                 },
-                "description": "Hejsetavle",
-                "quantity": 1,
-                "price": {
-                  "amount": 5000.00
-                },
-              },
-              {
-                "vat": {
-                    "type": "63",
-                    "amount": 12,
-                    "code": "StandardRated"
-                  },
-                  "description": "Beslag",
-                  "quantity": 2,
-                  "price": {
-                    "amount": 25
-                  },
-              }
+                {
+                    description: 'Beslag',
+                    name: 'Beslag',
+                    quantity: 2,
+                    price: {
+                        amount: 25
+                    },
+                    vat: {
+                        amount: 12.5,
+                        code: 'StandardRated',
+                        type: 'Moms'
+                    },
+                    unit: 'EA',
+                    certificate: undefined
+                }
             ],
-            "recipient": {
-              "name": "Den Lille Skole",
-              //"taxId": "00000",
-              "address": {
-                "country": "DK",
-                // "state": "London",
-                "city": "Helsingør",
-                "line1": "Fredericiavej",
-                "line2": "10",
-                "postalCode": "3000"
-              },
-              "contact": {
-                "mail": "Hans@dls.dk",
-                "phone": "26532147"
+            recipient: {
+                name: 'Den Lille Skole',
+                address: {
+                    country: 'DK',
+                    city: 'Helsingør',
+                    line1: 'Fredericiavej',
+                    line2: '10',
+                    postalCode: '3000'
+                },
+                contact: {
+                    mail: 'Hans@dls.dk',
+                    phone: '26532147'
                 }
             },
-            "total": {
-              "amount":6312.5,
-              "currency": "DKK"
+            total: {
+                amount: 6312.5,
+                currency: 'DKK'
             }
-          };
+        };
         expect(factory.ingestInvoice(DEFAULT_INVOICE)).toEqual(expectedJson);
-      });
+    });
+
+
     // Test suite for the Mapper function credit note xml to json.
     it('should convert XML to CreditNote', () => {
         const expectedJson = {
@@ -894,15 +900,14 @@ describe('Mapper', () => {
                 {
                     name: 'Strømforsyning',
                     description: 'Dell Adapter / Strømforsyning 130W til bl.a. Dell XPS 15 (Original)',
-                    quantity: '1.00',
+                    quantity: 1,
                     price: {
                         amount: 363.16
                     },
                     vat: {
                         amount: 90.79,
                         type: 'Moms',
-                        code: '63',
-                        exemptReason: undefined
+                        code: 'StandardRated'
                     },
                     unit: 'EA',
                     certificate: {

@@ -21,9 +21,8 @@ export interface Invoice {
       };
   };
   lines: Array<{
-      name: string;
       description: string;
-      quantity: string;
+      quantity: number;
       price: {
           amount: number;
       };
@@ -31,7 +30,6 @@ export interface Invoice {
           amount: number;
           type: string;
           code: string;
-          exemptReason: string;
       };
       unit: string;
   }>;
@@ -102,6 +100,7 @@ export interface MapperInterface {
 export const Mapper = (): MapperInterface => {
     const ingestInvoice = (xml: string): Invoice => {
         const jsonXml = JSON.parse(xml2json(xml, { compact: true }));
+        const invoiceLines = Array.isArray(jsonXml.Invoice['cac:InvoiceLine'])? jsonXml.Invoice['cac:InvoiceLine']: [jsonXml.Invoice['cac:InvoiceLine']];
         const invoice: Partial<Invoice> = {
             ref: jsonXml.Invoice['cbc:ID']._text,
             issued: jsonXml.Invoice['cbc:IssueDate']._text,
@@ -121,18 +120,29 @@ export const Mapper = (): MapperInterface => {
                   postalCode: jsonXml.Invoice['cac:AccountingCustomerParty']['cac:Party']['cac:PostalAddress']['cbc:PostalZone']?._text || ''
               }
            },
-            lines: jsonXml.Invoice['cac:InvoiceLine'].map((line: any) => ({
-                description: line['cac:Item']['cbc:Description']?._text || '',
-                quantity: parseInt(line['cbc:InvoicedQuantity']._text, 10),
-                price: {
-                    amount: parseFloat(line['cac:Price']['cbc:PriceAmount']._text)
-                },
-                vat: {
-                    amount: parseInt(line['cac:TaxTotal']['cac:TaxSubtotal']['cbc:TaxAmount']._text, ),
-                    type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:ID']._text,
-                    code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:ID']._text
-                },
-            })),
+            lines: invoiceLines.map((line: any) => ({
+            description: line['cac:Item']['cbc:Description']?._text.replace(/\s+/g, ' ').trim() || '',
+            name: line['cac:Item']['cbc:Name']?._text || '',
+            quantity: parseInt(line['cbc:InvoicedQuantity']._text, 10),
+            price: {
+                amount: parseFloat(line['cac:Price']['cbc:PriceAmount']._text)
+            },
+            vat: {
+                amount: parseFloat(line['cac:TaxTotal']['cbc:TaxAmount']._text),
+                type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:Name']._text,
+                code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:ID']._text
+            },
+            unit: line['cbc:InvoicedQuantity']._attributes.unitCode,
+            certificate: line['cac:Item']['cac:Certificate'] ? {
+                id: line['cac:Item']['cac:Certificate']['cbc:ID']._text,
+                typeCode: line['cac:Item']['cac:Certificate']['cbc:CertificateTypeCode']._text,
+                type: line['cac:Item']['cac:Certificate']['cbc:CertificateType']._text,
+                remarks: line['cac:Item']['cac:Certificate']['cbc:Remarks']._text.trim(),
+                issuerParty: {
+                    name: line['cac:Item']['cac:Certificate']['cac:IssuerParty']['cac:PartyName']['cbc:Name']._text
+                }
+            } : undefined
+        })),
             total: {
               amount: jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._text ? parseFloat(jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']._text) : 0,
               currency: jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._attributes?.currencyID || ''
