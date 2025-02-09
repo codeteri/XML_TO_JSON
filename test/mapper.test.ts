@@ -483,7 +483,7 @@ describe('Mapper', () => {
                       "amount": 25.00
                   },
                   "vat": {
-                      "amount": 12,
+                      "amount": 12.5,
                       "type": "63",
                       "code": "StandardRated"
                   }

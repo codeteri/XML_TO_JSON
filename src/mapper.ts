@@ -166,7 +166,7 @@ export const Mapper = (): MapperInterface => {
                   amount: parseFloat(line['cac:Price']['cbc:PriceAmount']._text)
               },
               vat: {
-                  amount: parseInt(line['cac:TaxTotal']['cac:TaxSubtotal']['cbc:TaxAmount']._text, 10),
+                  amount:  parseFloat(line['cac:TaxTotal']['cac:TaxSubtotal']['cbc:TaxAmount']._text,),
                   type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:ID']._text,
                   code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:ID']._text
               },
