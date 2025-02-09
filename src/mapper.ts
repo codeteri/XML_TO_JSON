@@ -76,6 +76,15 @@ export interface CreditNote {
           type: string;
           code: string;
       };
+      certificate?: {
+          id: string;
+          typeCode: string;
+          type: string;
+          remarks: string;
+          issuerParty: {
+              name: string;
+          };
+      };
   }>;
   total: {
       amount: number;
@@ -113,16 +122,19 @@ export const Mapper = (): MapperInterface => {
             }
          },
           lines: jsonXml.Invoice['cac:InvoiceLine'].map((line: any) => ({
+              name: line['cac:Item']['cbc:Name']?._text || '',
               description: line['cac:Item']['cbc:Description']?._text || '',
-              quantity: parseInt(line['cbc:InvoicedQuantity']._text, 10),
+              quantity: line['cbc:InvoicedQuantity']._text,
               price: {
                   amount: parseFloat(line['cac:Price']['cbc:PriceAmount']._text)
               },
               vat: {
-                  amount: parseInt(line['cac:TaxTotal']['cac:TaxSubtotal']['cbc:TaxAmount']._text, ),
-                  type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:ID']._text,
-                  code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:ID']._text
+                  amount: parseFloat(line['cac:TaxTotal']['cbc:TaxAmount']._text),
+                  type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:Name']._text,
+                  code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:ID']._text,
+                  exemptReason: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:TaxExemptionReason']?._text
               },
+              unit: line['cbc:InvoicedQuantity']['@unitCode']
           })),
           total: {
             amount: jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._text ? parseFloat(jsonXml.Invoice['cac:LegalMonetaryTotal']['cbc:PayableAmount']._text) : 0,
@@ -170,6 +182,15 @@ export const Mapper = (): MapperInterface => {
                   type: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cac:TaxScheme']['cbc:ID']._text,
                   code: line['cac:TaxTotal']['cac:TaxSubtotal']['cac:TaxCategory']['cbc:ID']._text
               },
+              certificate: line['cac:Item']['cac:Certificate'] ? {
+                  id: line['cac:Item']['cac:Certificate']['cbc:ID']._text,
+                  typeCode: line['cac:Item']['cac:Certificate']['cbc:CertificateTypeCode']._text,
+                  type: line['cac:Item']['cac:Certificate']['cbc:CertificateType']._text,
+                  remarks: line['cac:Item']['cac:Certificate']['cbc:Remarks']._text,
+                  issuerParty: {
+                      name: line['cac:Item']['cac:Certificate']['cac:IssuerParty']['cac:PartyName']['cbc:Name']._text
+                  }
+              } : undefined
           })),
           total: {
             amount: jsonXml.CreditNote['cac:LegalMonetaryTotal']['cbc:PayableAmount']?._text ? parseFloat(jsonXml.CreditNote['cac:LegalMonetaryTotal']['cbc:PayableAmount']._text) : 0,
@@ -179,6 +200,5 @@ export const Mapper = (): MapperInterface => {
       // @ts-ignore
       return creditNote as CreditNote;
   };
-
   return { ingestInvoice, ingestCreditNote };
 };
