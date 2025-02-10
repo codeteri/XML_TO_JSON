@@ -1,5 +1,5 @@
 // Desc: Test suite for the Mapper function
-import { Mapper, MapperInterface } from '../src/mapper';
+import { Mapper, MapperInterface, Invoice } from '../src/mapper';
 // Default invoice XML
 const DEFAULT_INVOICE=`<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
@@ -200,6 +200,7 @@ const DEFAULT_INVOICE=`<?xml version="1.0" encoding="UTF-8"?>
         </cac:Price>
     </cac:InvoiceLine>
 </Invoice>`;
+//Invoice with certificate
 const DEFAULT_INVOICE_CERTIFICATE = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
 	xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
@@ -376,7 +377,8 @@ const DEFAULT_INVOICE_CERTIFICATE = `<?xml version="1.0" encoding="UTF-8"?>
 		</cac:Price>
 	</cac:InvoiceLine>
 </Invoice>
-`;//Invoice with certificate
+`;
+// Default credit note XML
 const DEFAULT_CREDIT_NOTE=`<?xml version="1.0" encoding="UTF-8"?>
 <CreditNote xmlns="urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2"
             xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
@@ -557,6 +559,7 @@ const DEFAULT_CREDIT_NOTE=`<?xml version="1.0" encoding="UTF-8"?>
         </cac:Price>
     </cac:CreditNoteLine>
 </CreditNote>`;
+//Credit note with certificate
 const DEFAULT_CREDIT_NOTE_CERTIFICATE = `<?xml version="1.0" encoding="UTF-8"?>
 <CreditNote xmlns="urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2"
 	xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
@@ -700,7 +703,7 @@ const DEFAULT_CREDIT_NOTE_CERTIFICATE = `<?xml version="1.0" encoding="UTF-8"?>
 			<cbc:OrderableUnitFactorRate>1</cbc:OrderableUnitFactorRate>
 		</cac:Price>
 	</cac:CreditNoteLine>
-</CreditNote>`;//Credit note with certificate
+</CreditNote>`;
 
 
 // Test suite for the Mapper function invoice xml to json.
@@ -709,8 +712,6 @@ describe('Mapper', () => {
     beforeEach(() => {
         factory = Mapper();
     });
-
-
 
     // Test suite for the Mapper function invoice xml to json.
     it('should convert XML to Invoice', () => {
@@ -771,7 +772,6 @@ describe('Mapper', () => {
         };
         expect(factory.ingestInvoice(DEFAULT_INVOICE)).toEqual(expectedJson);
     });
-
 
     // Test suite for the Mapper function credit note xml to json.
     it('should convert XML to CreditNote', () => {
@@ -878,6 +878,7 @@ describe('Mapper', () => {
         expect(factory.ingestCreditNote(DEFAULT_CREDIT_NOTE_CERTIFICATE)).toEqual(expectedJson);
     });
 
+    // Test suite for the Mapper function invoice CERTIFICATE xml to json.
     it('should convert XML to Invoice with Certificate', () => {
         const expectedJson = {
             ref: 'Test2012-2021',
@@ -928,4 +929,144 @@ describe('Mapper', () => {
         };
         expect(factory.ingestInvoice(DEFAULT_INVOICE_CERTIFICATE)).toEqual(expectedJson);
     });
+
+    // Test suite for the Mapper function invoice json to xml.
+    it('should convert Invoice to XML', () => {
+        const invoice: Invoice = {
+            ref: 'A00095678',
+            issued: '2005-11-20',
+            recipient: {
+                name: 'Den Lille Skole',
+                contact: {
+                    mail: 'Hans@dls.dk',
+                    phone: '26532147'
+                },
+                address: {
+                    line1: 'Fredericiavej',
+                    line2: '10',
+                    city: 'Helsingør',
+                    country: 'DK',
+                    postalCode: '3000'
+                }
+            },
+            lines: [
+                {
+                    description: 'Hejsetavle',
+                    quantity: 1,
+                    price: {
+                        amount: 5000
+                    },
+                    vat: {
+                        amount: 1250,
+                        code: 'StandardRated',
+                        type: 'Moms'
+                    },
+                    unit: 'EA',
+                    certificate: undefined
+                },
+                {
+                    description: 'Beslag',
+                    quantity: 2,
+                    price: {
+                        amount: 25
+                    },
+                    vat: {
+                        amount: 12.5,
+                        code: 'StandardRated',
+                        type: 'Moms'
+                    },
+                    unit: 'EA',
+                    certificate: undefined
+                }
+            ],
+            total: {
+                amount: 6312.5,
+                currency: 'DKK'
+            }
+        };
+    
+    const expectedXml = `<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+        <cbc:ID>A00095678</cbc:ID>
+        <cbc:IssueDate>2005-11-20</cbc:IssueDate>
+        <cac:AccountingCustomerParty>
+            <cac:Party>
+                <cac:PartyName>
+                    <cbc:Name>Den Lille Skole</cbc:Name>
+                </cac:PartyName>
+                <cac:Contact>
+                    <cbc:ElectronicMail>Hans@dls.dk</cbc:ElectronicMail>
+                    <cbc:Telephone>26532147</cbc:Telephone>
+                </cac:Contact>
+                <cac:PostalAddress>
+                    <cbc:StreetName>Fredericiavej</cbc:StreetName>
+                    <cbc:BuildingNumber>10</cbc:BuildingNumber>
+                    <cbc:CityName>Helsingør</cbc:CityName>
+                    <cbc:PostalZone>3000</cbc:PostalZone>
+                    <cac:Country>
+                        <cbc:IdentificationCode>DK</cbc:IdentificationCode>
+                    </cac:Country>
+                </cac:PostalAddress>
+            </cac:Party>
+        </cac:AccountingCustomerParty>
+        <cac:InvoiceLine>
+            <cbc:ID>Hejsetavle</cbc:ID>
+            <cbc:InvoicedQuantity unitCode="EA">1</cbc:InvoicedQuantity>
+            <cbc:LineExtensionAmount currencyID="DKK">5000</cbc:LineExtensionAmount>
+            <cac:TaxTotal>
+                <cbc:TaxAmount currencyID="DKK">1250</cbc:TaxAmount>
+                <cac:TaxSubtotal>
+                    <cbc:TaxableAmount currencyID="DKK">5000</cbc:TaxableAmount>
+                    <cbc:TaxAmount currencyID="DKK">1250</cbc:TaxAmount>
+                    <cac:TaxCategory>
+                        <cbc:ID>StandardRated</cbc:ID>
+                        <cbc:Percent>25</cbc:Percent>
+                        <cac:TaxScheme>
+                            <cbc:ID>StandardRated</cbc:ID>
+                            <cbc:Name>Moms</cbc:Name>
+                        </cac:TaxScheme>
+                    </cac:TaxCategory>
+                </cac:TaxSubtotal>
+            </cac:TaxTotal>
+            <cac:Item>
+                <cbc:Description>Hejsetavle</cbc:Description>
+            </cac:Item>
+            <cac:Price>
+                <cbc:PriceAmount currencyID="DKK">5000</cbc:PriceAmount>
+            </cac:Price>
+        </cac:InvoiceLine>
+        <cac:InvoiceLine>
+            <cbc:ID>Beslag</cbc:ID>
+            <cbc:InvoicedQuantity unitCode="EA">2</cbc:InvoicedQuantity>
+            <cbc:LineExtensionAmount currencyID="DKK">25</cbc:LineExtensionAmount>
+            <cac:TaxTotal>
+                <cbc:TaxAmount currencyID="DKK">12.5</cbc:TaxAmount>
+                <cac:TaxSubtotal>
+                    <cbc:TaxableAmount currencyID="DKK">25</cbc:TaxableAmount>
+                    <cbc:TaxAmount currencyID="DKK">12.5</cbc:TaxAmount>
+                    <cac:TaxCategory>
+                        <cbc:ID>StandardRated</cbc:ID>
+                        <cbc:Percent>25</cbc:Percent>
+                        <cac:TaxScheme>
+                            <cbc:ID>StandardRated</cbc:ID>
+                            <cbc:Name>Moms</cbc:Name>
+                        </cac:TaxScheme>
+                    </cac:TaxCategory>
+                </cac:TaxSubtotal>
+            </cac:TaxTotal>
+            <cac:Item>
+                <cbc:Description>Beslag</cbc:Description>
+            </cac:Item>
+            <cac:Price>
+                <cbc:PriceAmount currencyID="DKK">25</cbc:PriceAmount>
+            </cac:Price>
+        </cac:InvoiceLine>
+        <cac:LegalMonetaryTotal>
+            <cbc:PayableAmount currencyID="DKK">6312.5</cbc:PayableAmount>
+        </cac:LegalMonetaryTotal>
+    </Invoice>`.trim();
+    
+    const normalizeXml = (xml: string) => xml.replace(/\s+/g, ' ').trim();
+            const resultXml = factory.exportInvoice(invoice);
+            expect(normalizeXml(resultXml)).toEqual(normalizeXml(expectedXml));
+        });
 });
