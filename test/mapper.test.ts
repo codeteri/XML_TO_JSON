@@ -704,15 +704,12 @@ const DEFAULT_CREDIT_NOTE_CERTIFICATE = `<?xml version="1.0" encoding="UTF-8"?>
 		</cac:Price>
 	</cac:CreditNoteLine>
 </CreditNote>`;
-
-
 // Test suite for the Mapper function invoice xml to json.
 describe('Mapper', () => {
     let factory: MapperInterface;
     beforeEach(() => {
         factory = Mapper();
     });
-
     // Test suite for the Mapper function invoice xml to json.
     it('should convert XML to Invoice', () => {
         const expectedJson = {
@@ -772,7 +769,6 @@ describe('Mapper', () => {
         };
         expect(factory.ingestInvoice(DEFAULT_INVOICE)).toEqual(expectedJson);
     });
-
     // Test suite for the Mapper function invoice CERTIFICATE xml to json.
     it('should convert XML to Invoice with Certificate', () => {
         const expectedJson = {
