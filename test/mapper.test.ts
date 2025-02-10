@@ -1,5 +1,5 @@
 // Desc: Test suite for the Mapper function
-import { Mapper, MapperInterface, Invoice } from '../src/mapper';
+import { Mapper, MapperInterface, Invoice, CreditNote } from '../src/mapper';
 // Default invoice XML
 const DEFAULT_INVOICE=`<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
@@ -773,6 +773,58 @@ describe('Mapper', () => {
         expect(factory.ingestInvoice(DEFAULT_INVOICE)).toEqual(expectedJson);
     });
 
+    // Test suite for the Mapper function invoice CERTIFICATE xml to json.
+    it('should convert XML to Invoice with Certificate', () => {
+        const expectedJson = {
+            ref: 'Test2012-2021',
+            issued: '2021-12-01',
+            recipient: {
+                name: 'Erhvervsstyrelsen',
+                contact: {
+                    mail: 'erst@erst.dk',
+                    phone: '72200030'
+                },
+                address: {
+                    line1: 'Langelinie Allé',
+                    line2: '17',
+                    city: 'København',
+                    country: 'DK',
+                    postalCode: '2100'
+                }
+            },
+            lines: [
+                {
+                    name: 'Strømforsyning',
+                    description: 'Dell Adapter / Strømforsyning 130W til bl.a. Dell XPS 15 (Original)',
+                    quantity: 1,
+                    price: {
+                        amount: 363.16
+                    },
+                    vat: {
+                        amount: 90.79,
+                        type: 'Moms',
+                        code: 'StandardRated'
+                    },
+                    unit: 'EA',
+                    certificate: {
+                        id: 'ENERGY_STAR',
+                        typeCode: 'NA',
+                        type: 'NA',
+                        remarks: 'ENERGY STAR is a voluntary government-backed program dedicated to helping individuals protect the environment through energy efficiency. The ENERGY STAR mark is the national symbol for energy efficiency, making it easy for consumers and businesses to identify high-quality, energy-efficient products, homes, and commercial and industrial buildings.',
+                        issuerParty: {
+                            name: 'NA'
+                        }
+                    }
+                }
+            ],
+            total: {
+                amount: 453.95,
+                currency: 'DKK'
+            }
+        };
+        expect(factory.ingestInvoice(DEFAULT_INVOICE_CERTIFICATE)).toEqual(expectedJson);
+    });
+
     // Test suite for the Mapper function credit note xml to json.
     it('should convert XML to CreditNote', () => {
         const expectedJson = {
@@ -878,60 +930,8 @@ describe('Mapper', () => {
         expect(factory.ingestCreditNote(DEFAULT_CREDIT_NOTE_CERTIFICATE)).toEqual(expectedJson);
     });
 
-    // Test suite for the Mapper function invoice CERTIFICATE xml to json.
-    it('should convert XML to Invoice with Certificate', () => {
-        const expectedJson = {
-            ref: 'Test2012-2021',
-            issued: '2021-12-01',
-            recipient: {
-                name: 'Erhvervsstyrelsen',
-                contact: {
-                    mail: 'erst@erst.dk',
-                    phone: '72200030'
-                },
-                address: {
-                    line1: 'Langelinie Allé',
-                    line2: '17',
-                    city: 'København',
-                    country: 'DK',
-                    postalCode: '2100'
-                }
-            },
-            lines: [
-                {
-                    name: 'Strømforsyning',
-                    description: 'Dell Adapter / Strømforsyning 130W til bl.a. Dell XPS 15 (Original)',
-                    quantity: 1,
-                    price: {
-                        amount: 363.16
-                    },
-                    vat: {
-                        amount: 90.79,
-                        type: 'Moms',
-                        code: 'StandardRated'
-                    },
-                    unit: 'EA',
-                    certificate: {
-                        id: 'ENERGY_STAR',
-                        typeCode: 'NA',
-                        type: 'NA',
-                        remarks: 'ENERGY STAR is a voluntary government-backed program dedicated to helping individuals protect the environment through energy efficiency. The ENERGY STAR mark is the national symbol for energy efficiency, making it easy for consumers and businesses to identify high-quality, energy-efficient products, homes, and commercial and industrial buildings.',
-                        issuerParty: {
-                            name: 'NA'
-                        }
-                    }
-                }
-            ],
-            total: {
-                amount: 453.95,
-                currency: 'DKK'
-            }
-        };
-        expect(factory.ingestInvoice(DEFAULT_INVOICE_CERTIFICATE)).toEqual(expectedJson);
-    });
-
     // Test suite for the Mapper function invoice json to xml.
-    it('should convert Invoice to XML', () => {
+    it('should convert Invoice JSON to XML', () => {
         const invoice: Invoice = {
             ref: 'A00095678',
             issued: '2005-11-20',
@@ -1068,5 +1068,379 @@ describe('Mapper', () => {
     const normalizeXml = (xml: string) => xml.replace(/\s+/g, ' ').trim();
             const resultXml = factory.exportInvoice(invoice);
             expect(normalizeXml(resultXml)).toEqual(normalizeXml(expectedXml));
-        });
+    });
+
+    // Test suite for the Mapper function invoice with certificate json to xml.
+    it('should convert Invoice with Certificate JSON to XML', () => {
+        const invoiceJson = {
+            ref: 'Test2012-2021',
+            issued: '2021-12-01',
+            recipient: {
+                name: 'Erhvervsstyrelsen',
+                contact: {
+                    mail: 'erst@erst.dk',
+                    phone: '72200030'
+                },
+                address: {
+                    line1: 'Langelinie Allé',
+                    line2: '17',
+                    city: 'København',
+                    country: 'DK',
+                    postalCode: '2100'
+                }
+            },
+            lines: [
+                {
+                    description: 'Dell Adapter / Strømforsyning 130W til bl.a. Dell XPS 15 (Original)',
+                    quantity: 1,
+                    price: {
+                        amount: 363.16
+                    },
+                    vat: {
+                        amount: 90.79,
+                        type: 'Moms',
+                        code: 'StandardRated'
+                    },
+                    unit: 'EA',
+                    certificate: {
+                        id: 'ENERGY_STAR',
+                        typeCode: 'NA',
+                        type: 'NA',
+                        remarks: 'ENERGY STAR is a voluntary government-backed program dedicated to helping individuals protect the environment through energy efficiency. The ENERGY STAR mark is the national symbol for energy efficiency, making it easy for consumers and businesses to identify high-quality, energy-efficient products, homes, and commercial and industrial buildings.',
+                        issuerParty: {
+                            name: 'NA'
+                        }
+                    }
+                }
+            ],
+            total: {
+                amount: 453.95,
+                currency: 'DKK'
+            }
+        };
+        const expectedXml = `
+        <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+            <cbc:ID>Test2012-2021</cbc:ID>
+            <cbc:IssueDate>2021-12-01</cbc:IssueDate>
+            <cac:AccountingCustomerParty>
+                <cac:Party>
+                    <cac:PartyName>
+                        <cbc:Name>Erhvervsstyrelsen</cbc:Name>
+                    </cac:PartyName>
+                    <cac:Contact>
+                        <cbc:ElectronicMail>erst@erst.dk</cbc:ElectronicMail>
+                        <cbc:Telephone>72200030</cbc:Telephone>
+                    </cac:Contact>
+                    <cac:PostalAddress>
+                        <cbc:StreetName>Langelinie Allé</cbc:StreetName>
+                        <cbc:BuildingNumber>17</cbc:BuildingNumber>
+                        <cbc:CityName>København</cbc:CityName>
+                        <cbc:PostalZone>2100</cbc:PostalZone>
+                        <cac:Country>
+                            <cbc:IdentificationCode>DK</cbc:IdentificationCode>
+                        </cac:Country>
+                    </cac:PostalAddress>
+                </cac:Party>
+            </cac:AccountingCustomerParty>
+            <cac:InvoiceLine>
+                <cbc:ID>Dell Adapter / Strømforsyning 130W til bl.a. Dell XPS 15 (Original)</cbc:ID>
+                <cbc:InvoicedQuantity unitCode="EA">1</cbc:InvoicedQuantity>
+                <cbc:LineExtensionAmount currencyID="DKK">363.16</cbc:LineExtensionAmount>
+                <cac:TaxTotal>
+                    <cbc:TaxAmount currencyID="DKK">90.79</cbc:TaxAmount>
+                    <cac:TaxSubtotal>
+                        <cbc:TaxableAmount currencyID="DKK">363.16</cbc:TaxableAmount>
+                        <cbc:TaxAmount currencyID="DKK">90.79</cbc:TaxAmount>
+                        <cac:TaxCategory>
+                            <cbc:ID>StandardRated</cbc:ID>
+                            <cbc:Percent>25</cbc:Percent>
+                            <cac:TaxScheme>
+                                <cbc:ID>StandardRated</cbc:ID>
+                                <cbc:Name>Moms</cbc:Name>
+                            </cac:TaxScheme>
+                        </cac:TaxCategory>
+                    </cac:TaxSubtotal>
+                </cac:TaxTotal>
+                <cac:Item>
+                    <cbc:Description>Dell Adapter / Strømforsyning 130W til bl.a. Dell XPS 15 (Original)</cbc:Description>
+                    <cac:Certificate>
+                        <cbc:ID>ENERGY_STAR</cbc:ID>
+                        <cbc:CertificateTypeCode>NA</cbc:CertificateTypeCode>
+                        <cbc:CertificateType>NA</cbc:CertificateType>
+                        <cbc:Remarks>ENERGY STAR is a voluntary government-backed program dedicated to helping individuals protect the environment through energy efficiency. The ENERGY STAR mark is the national symbol for energy efficiency, making it easy for consumers and businesses to identify high-quality, energy-efficient products, homes, and commercial and industrial buildings.</cbc:Remarks>
+                        <cac:IssuerParty>
+                            <cac:PartyName>
+                                <cbc:Name>NA</cbc:Name>
+                            </cac:PartyName>
+                        </cac:IssuerParty>
+                    </cac:Certificate>
+                </cac:Item>
+                <cac:Price>
+                    <cbc:PriceAmount currencyID="DKK">363.16</cbc:PriceAmount>
+                </cac:Price>
+            </cac:InvoiceLine>
+            <cac:LegalMonetaryTotal>
+                <cbc:PayableAmount currencyID="DKK">453.95</cbc:PayableAmount>
+            </cac:LegalMonetaryTotal>
+        </Invoice>`.trim();
+        const normalizeXml = (xml: string) => xml.replace(/\s+/g, ' ').trim();
+        const resultXml = factory.exportInvoice(invoiceJson);
+        expect(normalizeXml(resultXml)).toEqual(normalizeXml(expectedXml));
+    });
+
+    // Test suite for the Mapper function credit note json to xml.
+    it('should convert CreditNote JSON to XML', () => {
+        const creditNote: CreditNote = {
+            ref: 'A00095679',
+            issued: '2005-11-20',
+            recipient: {
+                name: 'Den Lille Skole',
+                contact: {
+                    mail: 'Hans@dls.dk',
+                    phone: '26532147'
+                },
+                address: {
+                    line1: 'Fredericiavej',
+                    line2: '10',
+                    city: 'Helsingør',
+                    country: 'DK',
+                    postalCode: '3000'
+                }
+            },
+            lines: [
+                {
+                    description: 'Hejsetavle',
+                    quantity: 1,
+                    price: {
+                        amount: 5000
+                    },
+                    vat: {
+                        amount: 1250,
+                        code: 'StandardRated',
+                        type: 'Moms'
+                    },
+                    certificate: undefined
+                },
+                {
+                    description: 'Beslag',
+                    quantity: 2,
+                    price: {
+                        amount: 25
+                    },
+                    vat: {
+                        amount: 12.5,
+                        code: 'StandardRated',
+                        type: 'Moms'
+                    },
+                    certificate: undefined
+                }
+            ],
+            total: {
+                amount: 6312.5,
+                currency: 'DKK'
+            }
+        };
+    
+        const expectedXml = `
+    <CreditNote xmlns="urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+        <cbc:ID>A00095679</cbc:ID>
+        <cbc:IssueDate>2005-11-20</cbc:IssueDate>
+        <cac:AccountingCustomerParty>
+            <cac:Party>
+                <cac:PartyName>
+                    <cbc:Name>Den Lille Skole</cbc:Name>
+                </cac:PartyName>
+                <cac:Contact>
+                    <cbc:ElectronicMail>Hans@dls.dk</cbc:ElectronicMail>
+                    <cbc:Telephone>26532147</cbc:Telephone>
+                </cac:Contact>
+                <cac:PostalAddress>
+                    <cbc:StreetName>Fredericiavej</cbc:StreetName>
+                    <cbc:BuildingNumber>10</cbc:BuildingNumber>
+                    <cbc:CityName>Helsingør</cbc:CityName>
+                    <cbc:PostalZone>3000</cbc:PostalZone>
+                    <cac:Country>
+                        <cbc:IdentificationCode>DK</cbc:IdentificationCode>
+                    </cac:Country>
+                </cac:PostalAddress>
+            </cac:Party>
+        </cac:AccountingCustomerParty>
+        <cac:CreditNoteLine>
+            <cbc:ID>Hejsetavle</cbc:ID>
+            <cbc:CreditedQuantity>1</cbc:CreditedQuantity>
+            <cbc:LineExtensionAmount currencyID="DKK">5000</cbc:LineExtensionAmount>
+            <cac:TaxTotal>
+                <cbc:TaxAmount currencyID="DKK">1250</cbc:TaxAmount>
+                <cac:TaxSubtotal>
+                    <cbc:TaxableAmount currencyID="DKK">5000</cbc:TaxableAmount>
+                    <cbc:TaxAmount currencyID="DKK">1250</cbc:TaxAmount>
+                    <cac:TaxCategory>
+                        <cbc:ID>StandardRated</cbc:ID>
+                        <cbc:Percent>25</cbc:Percent>
+                        <cac:TaxScheme>
+                            <cbc:ID>StandardRated</cbc:ID>
+                            <cbc:Name>Moms</cbc:Name>
+                        </cac:TaxScheme>
+                    </cac:TaxCategory>
+                </cac:TaxSubtotal>
+            </cac:TaxTotal>
+            <cac:Item>
+                <cbc:Description>Hejsetavle</cbc:Description>
+            </cac:Item>
+            <cac:Price>
+                <cbc:PriceAmount currencyID="DKK">5000</cbc:PriceAmount>
+            </cac:Price>
+        </cac:CreditNoteLine>
+        <cac:CreditNoteLine>
+            <cbc:ID>Beslag</cbc:ID>
+            <cbc:CreditedQuantity>2</cbc:CreditedQuantity>
+            <cbc:LineExtensionAmount currencyID="DKK">25</cbc:LineExtensionAmount>
+            <cac:TaxTotal>
+                <cbc:TaxAmount currencyID="DKK">12.5</cbc:TaxAmount>
+                <cac:TaxSubtotal>
+                    <cbc:TaxableAmount currencyID="DKK">25</cbc:TaxableAmount>
+                    <cbc:TaxAmount currencyID="DKK">12.5</cbc:TaxAmount>
+                    <cac:TaxCategory>
+                        <cbc:ID>StandardRated</cbc:ID>
+                        <cbc:Percent>25</cbc:Percent>
+                        <cac:TaxScheme>
+                            <cbc:ID>StandardRated</cbc:ID>
+                            <cbc:Name>Moms</cbc:Name>
+                        </cac:TaxScheme>
+                    </cac:TaxCategory>
+                </cac:TaxSubtotal>
+            </cac:TaxTotal>
+            <cac:Item>
+                <cbc:Description>Beslag</cbc:Description>
+            </cac:Item>
+            <cac:Price>
+                <cbc:PriceAmount currencyID="DKK">25</cbc:PriceAmount>
+            </cac:Price>
+        </cac:CreditNoteLine>
+        <cac:LegalMonetaryTotal>
+            <cbc:PayableAmount currencyID="DKK">6312.5</cbc:PayableAmount>
+        </cac:LegalMonetaryTotal>
+    </CreditNote>`.trim();
+    
+        const normalizeXml = (xml: string) => xml.replace(/\s+/g, ' ').trim();
+        const resultXml = factory.exportCreditNote(creditNote);
+        expect(normalizeXml(resultXml)).toEqual(normalizeXml(expectedXml));
+    });
+
+    // Test suite for the Mapper function credit note with certificate json to xml.
+    it('should convert CreditNote with Certificate JSON to XML', () => {
+        const creditNoteJson = {
+            ref: 'Test2012-2021',
+            issued: '2021-12-20',
+            recipient: {
+                name: 'Erhvervsstyrelsen',
+                contact: {
+                    mail: 'erst@erst.dk',
+                    phone: '72200030'
+                },
+                address: {
+                    line1: 'Langelinie Allé',
+                    line2: '17',
+                    city: 'København',
+                    country: 'DK',
+                    postalCode: '2100'
+                }
+            },
+            lines: [
+                {
+                    description: 'Dell Adapter / Strømforsyning 130W til bl.a. Dell XPS 15 (Original)',
+                    quantity: 1,
+                    price: {
+                        amount: 363.16
+                    },
+                    vat: {
+                        amount: 90.79,
+                        type: 'Moms',
+                        code: 'StandardRated'
+                    },
+                    certificate: {
+                        id: 'ENERGY_STAR',
+                        typeCode: 'NA',
+                        type: 'NA',
+                        remarks: 'ENERGY STAR is a voluntary government-backed program dedicated to helping individuals protect the environment through energy efficiency. The ENERGY STAR mark is the national symbol for energy efficiency, making it easy for consumers and businesses to identify high-quality, energy-efficient products, homes, and commercial and industrial buildings.',
+                        issuerParty: {
+                            name: 'NA'
+                        }
+                    }
+                }
+            ],
+            total: {
+                amount: 453.95,
+                currency: 'DKK'
+            }
+        };
+        const expectedXml = `
+        <CreditNote xmlns="urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+            <cbc:ID>Test2012-2021</cbc:ID>
+            <cbc:IssueDate>2021-12-20</cbc:IssueDate>
+            <cac:AccountingCustomerParty>
+                <cac:Party>
+                    <cac:PartyName>
+                        <cbc:Name>Erhvervsstyrelsen</cbc:Name>
+                    </cac:PartyName>
+                    <cac:Contact>
+                        <cbc:ElectronicMail>erst@erst.dk</cbc:ElectronicMail>
+                        <cbc:Telephone>72200030</cbc:Telephone>
+                    </cac:Contact>
+                    <cac:PostalAddress>
+                        <cbc:StreetName>Langelinie Allé</cbc:StreetName>
+                        <cbc:BuildingNumber>17</cbc:BuildingNumber>
+                        <cbc:CityName>København</cbc:CityName>
+                        <cbc:PostalZone>2100</cbc:PostalZone>
+                        <cac:Country>
+                            <cbc:IdentificationCode>DK</cbc:IdentificationCode>
+                        </cac:Country>
+                    </cac:PostalAddress>
+                </cac:Party>
+            </cac:AccountingCustomerParty>
+            <cac:CreditNoteLine>
+                <cbc:ID>Dell Adapter / Strømforsyning 130W til bl.a. Dell XPS 15 (Original)</cbc:ID>
+                <cbc:CreditedQuantity>1</cbc:CreditedQuantity>
+                <cbc:LineExtensionAmount currencyID="DKK">363.16</cbc:LineExtensionAmount>
+                <cac:TaxTotal>
+                    <cbc:TaxAmount currencyID="DKK">90.79</cbc:TaxAmount>
+                    <cac:TaxSubtotal>
+                        <cbc:TaxableAmount currencyID="DKK">363.16</cbc:TaxableAmount>
+                        <cbc:TaxAmount currencyID="DKK">90.79</cbc:TaxAmount>
+                        <cac:TaxCategory>
+                            <cbc:ID>StandardRated</cbc:ID>
+                            <cbc:Percent>25</cbc:Percent>
+                            <cac:TaxScheme>
+                                <cbc:ID>StandardRated</cbc:ID>
+                                <cbc:Name>Moms</cbc:Name>
+                            </cac:TaxScheme>
+                        </cac:TaxCategory>
+                    </cac:TaxSubtotal>
+                </cac:TaxTotal>
+                <cac:Item>
+                    <cbc:Description>Dell Adapter / Strømforsyning 130W til bl.a. Dell XPS 15 (Original)</cbc:Description>
+                    <cac:Certificate>
+                        <cbc:ID>ENERGY_STAR</cbc:ID>
+                        <cbc:CertificateTypeCode>NA</cbc:CertificateTypeCode>
+                        <cbc:CertificateType>NA</cbc:CertificateType>
+                        <cbc:Remarks>ENERGY STAR is a voluntary government-backed program dedicated to helping individuals protect the environment through energy efficiency. The ENERGY STAR mark is the national symbol for energy efficiency, making it easy for consumers and businesses to identify high-quality, energy-efficient products, homes, and commercial and industrial buildings.</cbc:Remarks>
+                        <cac:IssuerParty>
+                            <cac:PartyName>
+                                <cbc:Name>NA</cbc:Name>
+                            </cac:PartyName>
+                        </cac:IssuerParty>
+                    </cac:Certificate>
+                </cac:Item>
+                <cac:Price>
+                    <cbc:PriceAmount currencyID="DKK">363.16</cbc:PriceAmount>
+                </cac:Price>
+            </cac:CreditNoteLine>
+            <cac:LegalMonetaryTotal>
+                <cbc:PayableAmount currencyID="DKK">453.95</cbc:PayableAmount>
+            </cac:LegalMonetaryTotal>
+        </CreditNote>`.trim();
+        const normalizeXml = (xml: string) => xml.replace(/\s+/g, ' ').trim();
+        const resultXml = factory.exportCreditNote(creditNoteJson);
+        expect(normalizeXml(resultXml)).toEqual(normalizeXml(expectedXml));
+    });
 });

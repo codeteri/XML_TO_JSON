@@ -104,6 +104,7 @@ export interface MapperInterface {
   ingestInvoice(xml: string): Invoice;
   ingestCreditNote(xml: string): CreditNote;
   exportInvoice(invoice: Invoice): string;
+  exportCreditNote(creditNote: CreditNote): string;
 }
 
 // Mapper function. This function returns a Mapper object that contains the ingestInvoice and ingestCreditNote functions
@@ -289,5 +290,76 @@ export const Mapper = (): MapperInterface => {
   return json2xml(jsonXml, { compact: true, spaces: 4 });
 };
 
-  return { ingestInvoice, ingestCreditNote, exportInvoice };
+  const exportCreditNote = (creditNote: CreditNote): string => {
+    const jsonXml: any = {
+        CreditNote: {
+            _attributes: {
+                xmlns: "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2",
+                "xmlns:cac": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+                "xmlns:cbc": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+            },
+            "cbc:ID": { _text: creditNote.ref },
+            "cbc:IssueDate": { _text: creditNote.issued },
+            "cac:AccountingCustomerParty": {
+                "cac:Party": {
+                    "cac:PartyName": { "cbc:Name": { _text: creditNote.recipient.name } },
+                    "cac:Contact": {
+                        "cbc:ElectronicMail": { _text: creditNote.recipient.contact.mail },
+                        "cbc:Telephone": { _text: creditNote.recipient.contact.phone }
+                    },
+                    "cac:PostalAddress": {
+                        "cbc:StreetName": { _text: creditNote.recipient.address.line1 },
+                        "cbc:BuildingNumber": { _text: creditNote.recipient.address.line2 },
+                        "cbc:CityName": { _text: creditNote.recipient.address.city },
+                        "cbc:PostalZone": { _text: creditNote.recipient.address.postalCode },
+                        "cac:Country": { "cbc:IdentificationCode": { _text: creditNote.recipient.address.country } }
+                    }
+                }
+            },
+            "cac:CreditNoteLine": creditNote.lines.map(line => ({
+                "cbc:ID": { _text: line.description },
+                "cbc:CreditedQuantity": { _text: line.quantity.toString() },
+                "cbc:LineExtensionAmount": { _attributes: { currencyID: creditNote.total.currency }, _text: line.price.amount.toString() },
+                "cac:TaxTotal": {
+                    "cbc:TaxAmount": { _attributes: { currencyID: creditNote.total.currency }, _text: line.vat.amount.toString() },
+                    "cac:TaxSubtotal": {
+                        "cbc:TaxableAmount": { _attributes: { currencyID: creditNote.total.currency }, _text: line.price.amount.toString() },
+                        "cbc:TaxAmount": { _attributes: { currencyID: creditNote.total.currency }, _text: line.vat.amount.toString() },
+                        "cac:TaxCategory": {
+                            "cbc:ID": { _text: line.vat.code },
+                            "cbc:Percent": { _text: "25" },
+                            "cac:TaxScheme": {
+                                "cbc:ID": { _text: line.vat.code },
+                                "cbc:Name": { _text: line.vat.type }
+                            }
+                        }
+                    }
+                },
+                "cac:Item": {
+                    "cbc:Description": { _text: line.description },
+                    ...(line.certificate ? {
+                        "cac:Certificate": {
+                            "cbc:ID": { _text: line.certificate.id },
+                            "cbc:CertificateTypeCode": { _text: line.certificate.typeCode },
+                            "cbc:CertificateType": { _text: line.certificate.type },
+                            "cbc:Remarks": { _text: line.certificate.remarks },
+                            "cac:IssuerParty": {
+                                "cac:PartyName": { "cbc:Name": { _text: line.certificate.issuerParty.name } }
+                            }
+                        }
+                    } : {})
+                },
+                "cac:Price": {
+                    "cbc:PriceAmount": { _attributes: { currencyID: creditNote.total.currency }, _text: line.price.amount.toString() }
+                }
+            })),
+            "cac:LegalMonetaryTotal": {
+                "cbc:PayableAmount": { _attributes: { currencyID: creditNote.total.currency }, _text: creditNote.total.amount.toString() }
+            }
+        }
+    };
+    return json2xml(jsonXml, { compact: true, spaces: 4 });
+  };
+
+return { ingestInvoice, ingestCreditNote, exportInvoice, exportCreditNote };
 };
